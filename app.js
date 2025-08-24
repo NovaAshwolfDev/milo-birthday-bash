@@ -258,26 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Profile updated!");
         console.log(result);
       }
-
-      if (clickedButton === "linkVRCBtn") {
-        const response = await fetch('https://vrchat.com/api/1/auth/user');
-        const json = await response.json();
-        const userID = json.id;
-        const vrcDisplayName = json.displayName;
-        const res = await fetch(apiBase + "/user/link-vrchat", {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ userID }),
-        });
-        const result = await res.json();
-        showNotification(`VRChat Account linked successfully, Welcome, ${vrcDisplayName}`, "success", 5000);
-        console.log(result);
-      }
-    });
-    }
   }
 
   // Rooms page
