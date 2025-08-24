@@ -1,7 +1,7 @@
-const apiBase = "http://25.16.42.238:3000/api";
+const apiBase = "https://milo-api.onrender.com/api";
 const token = localStorage.getItem("token");
 const userCache = {};
-const socket = io("http://25.16.42.238:3000", { auth: { token } });
+const socket = io("https://milo-api.onrender.com/", { auth: { token } });
 
 async function loadRooms() {
   const res = await fetch(apiBase + "/rooms", {
