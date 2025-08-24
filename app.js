@@ -238,27 +238,37 @@ document.addEventListener("DOMContentLoaded", () => {
           profileForm.bio.value = user.bio || "";
           profileForm.vrchatId.value = user.vrchatId || "";
           console.log(user.vrchatId);
+
           const disp = document.getElementById("profilePicPreview");
-          disp.src = `${user.profilePic}`;
+          // Set src to your streaming route
+          if (user.profilePic) {
+            disp.src = `${apiBase}/user/profile-pic/${encodeURIComponent(user.profilePic)}`;
+          }
         });
 
       profileForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-      const clickedButton = e.submitter.name;
-      console.log(clickedButton);
-      if (clickedButton === "updateBtn") {
-        const formData = new FormData(profileForm);
-        const res = await fetch(apiBase + "/user/me", {
-          method: "PUT",
-          headers: { Authorization: "Bearer " + token },
-          body: formData,
-        });
-        const result = await res.json();
-        alert("Profile updated!");
-        console.log(result);
-      }
-    });
+        const clickedButton = e.submitter.name;
+        console.log(clickedButton);
+        if (clickedButton === "updateBtn") {
+          const formData = new FormData(profileForm);
+          const res = await fetch(apiBase + "/user/me", {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + token },
+            body: formData,
+          });
+          const result = await res.json();
+          alert("Profile updated!");
+          console.log(result);
+
+          // Update the preview immediately
+          if (result.profilePic) {
+            document.getElementById("profilePicPreview").src =
+              `${apiBase}/user/profile-pic/${encodeURIComponent(result.profilePic)}`;
+          }
+        }
+      });
     }
   }
 
