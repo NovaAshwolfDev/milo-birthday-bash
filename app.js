@@ -258,6 +258,8 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Profile updated!");
         console.log(result);
       }
+    });
+    }
   }
 
   // Rooms page
