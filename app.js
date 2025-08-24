@@ -46,56 +46,83 @@ function parseUsers(userData) {
   return `${JSON.stringify(userData)}`;
 }
 
-
 async function loadPartys() {
   try {
     const [partyRes, meRes] = await Promise.all([
-      fetch(apiBase + "/party", { headers: { Authorization: "Bearer " + token } }),
-      fetch(apiBase + "/user/me", { headers: { Authorization: "Bearer " + token } })
+      fetch(apiBase + "/party", {
+        headers: { Authorization: "Bearer " + token },
+      }),
+      fetch(apiBase + "/user/me", {
+        headers: { Authorization: "Bearer " + token },
+      }),
     ]);
 
     const partys = await partyRes.json();
     const me = await meRes.json();
 
     // Cache users
-    const allMemberIds = [...new Set(partys.flatMap(p => p.members.map(m => m._id)))];
-    const usersToFetch = allMemberIds.filter(id => !userCache[id]);
+    const allMemberIds = [
+      ...new Set(partys.flatMap((p) => p.members.map((m) => m._id))),
+    ];
+    const usersToFetch = allMemberIds.filter((id) => !userCache[id]);
 
-    await Promise.all(usersToFetch.map(async id => {
-      const res = await fetch(apiBase + "/user/" + id, { headers: { Authorization: "Bearer " + token } });
-      const user = await res.json();
-      userCache[id] = user;
-    }));
+    await Promise.all(
+      usersToFetch.map(async (id) => {
+        const res = await fetch(apiBase + "/user/" + id, {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const user = await res.json();
+        userCache[id] = user;
+      })
+    );
 
     // Render parties
     const list = document.getElementById("partyList");
-    list.innerHTML = partys.map(p => {
-      const membersHTML = p.members.map(m => {
-        const user = userCache[m._id];
-        return `
+    list.innerHTML = partys
+      .map((p) => {
+        const membersHTML = p.members
+          .map((m) => {
+            const user = userCache[m._id];
+            return `
           <div class="member">
-            <img src="${user.profilePic ? apiBase + "/" + user.profilePic.replace(/\\/g, "/") : "default.png"}" width="30" height="30" />
+            <img src="${
+              user.profilePic
+                ? apiBase + "/" + user.profilePic.replace(/\\/g, "/")
+                : "default.png"
+            }" width="30" height="30" />
             <span>${user.displayName || user.username}</span>
             <small>(${user.status})</small>
           </div>
         `;
-      }).join("");
+          })
+          .join("");
 
-      const isOwner = me._id === p.owner._id;
-      const hasInstance = p.instanceId && p.instanceId !== "";
+        const isOwner = me._id === p.owner._id;
+        const hasInstance = p.instanceId && p.instanceId !== "";
 
-      return `
+        return `
         <div class="room">
-          <strong>${p.name}</strong> (${p.members.length}/${p.maxMembers || "∞"})
+          <strong>${p.name}</strong> (${p.members.length}/${
+          p.maxMembers || "∞"
+        })
           <div class="members">${membersHTML}</div>
           <div class="partyButtonsContainer">
-            <button class="partyButtons" onclick="joinParty('${p._id}')">Join</button>
-            <button class="partyButtons" onclick="leaveParty('${p._id}')">Leave</button>
-            ${isOwner && hasInstance ? `<button class="partyButtons" onclick="inviteAll('${p._id}')">Invite All To You</button>` : ""}
+            <button class="partyButtons" onclick="joinParty('${
+              p._id
+            }')">Join</button>
+            <button class="partyButtons" onclick="leaveParty('${
+              p._id
+            }')">Leave</button>
+            ${
+              isOwner && hasInstance
+                ? `<button class="partyButtons" onclick="inviteAll('${p._id}')">Invite All To You</button>`
+                : ""
+            }
           </div>
         </div><br>
       `;
-    }).join("");
+      })
+      .join("");
   } catch (err) {
     showNotification(`Failed to load parties: ${err}`, "error", 5000);
   }
@@ -115,8 +142,12 @@ async function joinParty(id) {
       headers: { Authorization: "Bearer " + localStorage.getItem("token") },
     });
     const result = await res.json();
-    console.log(result.owner)
-    showNotification(`Successfully Joined ${result.party.owner.displayName}'s Party!`, "info", 10000);
+    console.log(result.owner);
+    showNotification(
+      `Successfully Joined ${result.party.owner.displayName}'s Party!`,
+      "info",
+      10000
+    );
     // alert(result.error);
   } catch (error) {
     // alert(`Error: ${error}`);
@@ -141,10 +172,10 @@ async function inviteOne(memberId, partyId) {
     const res = await fetch(`${apiBase}/party/${partyId}/invite`, {
       method: "POST",
       headers: {
-        "Authorization": "Bearer " + localStorage.getItem("token"),
-        "Content-Type": "application/json"
+        Authorization: "Bearer " + localStorage.getItem("token"),
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ memberId })
+      body: JSON.stringify({ memberId }),
     });
 
     const result = await res.json();
@@ -164,7 +195,11 @@ async function inviteAll(partyId) {
       headers: { Authorization: "Bearer " + localStorage.getItem("token") },
     });
     const result = await res.json();
-    showNotification("Successfully invited all party members!", "success", 5000);
+    showNotification(
+      "Successfully invited all party members!",
+      "success",
+      5000
+    );
     return result;
   } catch (err) {
     console.error(err);
@@ -220,36 +255,41 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
-
+  
   // Profile page
   if (path.endsWith("profile.html")) {
     const profileForm = document.getElementById("profileForm");
-    if (profileForm) {
-      fetch(apiBase + "/user/me", {
-        headers: { Authorization: "Bearer " + token },
-      })
-        .then((r) => r.json())
-        .then((user) => {
-          profileForm.displayName.value = user.displayName || "";
-          profileForm.username.value = user.username || "";
-          profileForm.email.value = user.email || "";
-          profileForm.status.value = user.status || "";
-          profileForm.themeColor.value = user.themeColor || "";
-          profileForm.bio.value = user.bio || "";
-          profileForm.vrchatId.value = user.vrchatId || "";
+    const disp = document.getElementById("profilePicPreview");
 
-          const disp = document.getElementById("profilePicPreview");
-          // Set src to your streaming route
-          if (user.profilePic) {
-            disp.src = `${apiBase}/user/profile-pic/${user.profilePic}?t=${Date.now()}`;
-          }
+    if (profileForm) {
+      // Load user info
+      const loadUser = async () => {
+        const res = await fetch(apiBase + "/user/me", {
+          headers: { Authorization: "Bearer " + token },
         });
+        const user = await res.json();
+
+        profileForm.displayName.value = user.displayName || "";
+        profileForm.username.value = user.username || "";
+        profileForm.email.value = user.email || "";
+        profileForm.status.value = user.status || "";
+        profileForm.themeColor.value = user.themeColor || "";
+        profileForm.bio.value = user.bio || "";
+        profileForm.vrchatId.value = user.vrchatId || "";
+
+        if (user.profilePic) {
+          disp.src = `${apiBase}/user/profile-pic/${encodeURIComponent(
+            user.profilePic
+          )}?t=${Date.now()}`;
+        }
+      };
+
+      loadUser();
 
       profileForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const clickedButton = e.submitter.name;
-        console.log(clickedButton);
+        const clickedButton = e.submitter?.name;
         if (clickedButton === "updateBtn") {
           const formData = new FormData(profileForm);
           const res = await fetch(apiBase + "/user/me", {
@@ -261,10 +301,11 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Profile updated!");
           console.log(result);
 
-          // Update the preview immediately
+          // Update preview immediately, cache-busting
           if (result.profilePic) {
-            document.getElementById("profilePicPreview").src =
-              `${apiBase}/user/profile-pic/${encodeURIComponent(result.profilePic)}`;
+            disp.src = `${apiBase}/user/profile-pic/${encodeURIComponent(
+              result.profilePic
+            )}?t=${Date.now()}`;
           }
         }
       });
@@ -292,7 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
-    if (path.endsWith("party.html")) {
+  if (path.endsWith("party.html")) {
     const createPartyForm = document.getElementById("createPartyForm");
     if (createPartyForm) {
       createPartyForm.addEventListener("submit", async (e) => {
@@ -310,7 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-      setupPartySockets();
+    setupPartySockets();
   }
 
   // Socket.io stuff
@@ -322,6 +363,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Party updated event received");
     if (path.endsWith("party.html")) {
       loadPartys();
-    } 
+    }
   });
 });
