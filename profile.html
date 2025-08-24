@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile - Milo's Birthday Bash Club</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <nav>
+    <h1>Milo's Birthday Bash Club</h1>
+    <div id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="rooms.html">Rooms</a>
+      <a href="party.html">Party's</a>
+      <a onclick="logout()">Logout</a>
+    </div>
+  </nav>
+  <main>
+    <div class="container" type="profile">
+      <h2>Your Profile</h2>
+      <!-- Profile Picture Preview -->
+      <img id="profilePicPreview" src="default-avatar.png" aria-live="polite" alt="Profile Picture">
+
+      <form id="profileForm" enctype="multipart/form-data">
+        <label>Display Name:
+          <input type="text" name="displayName" placeholder="Enter your Display Name">
+        </label>
+        <label>Username:
+          <input type="text" name="username" placeholder="Enter your username">
+        </label>
+        <label>Email:
+          <input type="email" name="email" placeholder="Enter your email">
+        </label>
+        <label>Status:
+          <textarea name="status" placeholder="Set your status!"></textarea>
+        </label>
+        <label>Bio:
+          <textarea name="bio" placeholder="Tell us about yourself"></textarea>
+        </label>
+        <label for="themeColor">Profile Theme Color:
+        <input type="color" id="themeColor" name="themeColor" value="#4CAF50">
+        </label>
+        <label>VRChat User ID:
+          <textarea name="vrchatId" placeholder="Your VRChat User ID"></textarea>
+        </label>
+        <label>Profile Picture:
+          <input type="file" name="profilePic" accept="image/*">
+        </label>
+        <button class="partyButtons" name="updateBtn" type="submit">Update Profile</button>
+        <button class="partyButtons" name="linkVRCBtn" type="submit">Link VRChat Account</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

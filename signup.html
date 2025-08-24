@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup - Milo's Birthday Bash Club</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <nav>
+    <h1>Milo's Birthday Bash Club</h1>
+    <div id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="login.html">Login</a>
+    </div>
+  </nav>
+  <main class="center">
+    <header>Signup</h2>
+    <form id="signupForm" enctype="multipart/form-data">
+      <input type="text" name="username" placeholder="Username" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <textarea name="bio" placeholder="Tell us about yourself..."></textarea>
+      <label>Profile Picture: <input type="file" name="profilePic"></label>
+      <button type="submit">Signup</button>
+    </form>
+    <div id="signupMsg"></div>
+  </main>
+</body>
+</html>

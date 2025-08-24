@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="app.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <meta charset="UTF-8" />
+    <title>Party's - Milo's Birthday Bash Club</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav>
+      <h1>Milo's Birthday Bash Club</h1>
+      <div id="nav-links">
+        <a href="index.html">Home</a>
+        <a href="profile.html">Profile</a>
+        <a href="rooms.html">Rooms</a>
+        <a onclick="logout()">Logout</a>
+      </div>
+    </nav>
+    <div id="notifications"></div>
+    <main>
+      <div class="container">
+        <h2>Party System</h2>
+
+        <!-- CREATE PARTY -->
+        <section>
+          <h3>Create Party</h3>
+          <form id="createPartyForm">
+            <label for="roomTitle">Room Title:</label>
+            <input
+              type="text"
+              id="roomTitle"
+              name="name"
+              placeholder="Enter room name"
+              required
+            />
+            <input
+              type="number"
+              id="roomTitle"
+              name="maxMembers"
+              placeholder="Enter the max member's party count."
+              required
+            />
+            <button class="partyButtons" type="submit">Create Party</button>
+          </form>
+          <p id="createdCode"></p>
+        </section>
+
+        <!-- JOIN PARTY -->
+        <section>
+          <h3>Join Party</h3>
+          <form id="joinPartyForm">
+            <input
+              type="text"
+              id="joinCode"
+              placeholder="Enter 5-digit code"
+              maxlength="5"
+              required
+            />
+            <button class="partyButtons" type="submit">Join</button>
+          </form>
+          <p id="joinMsg"></p>
+        </section>
+
+        <!-- LEAVE PARTY -->
+        <section>
+          <h3>Leave Party</h3>
+          <form id="leavePartyForm">
+            <input
+              type="text"
+              id="leaveCode"
+              placeholder="Enter party code"
+              maxlength="5"
+              required
+            />
+            <button class="partyButtons" type="submit">Leave</button>
+          </form>
+          <p id="leaveMsg"></p>
+        </section>
+
+        <!-- REAL-TIME DASHBOARD -->
+        <div id="partyList" aria-live="polite"></div>
+      </div>
+    </main>
+  </body>
+  <script type="module" src="modules/notification_module.js"></script>
+</html>
