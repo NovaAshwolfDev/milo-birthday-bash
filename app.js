@@ -239,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
           profileForm.vrchatId.value = user.vrchatId || "";
           console.log(user.vrchatId);
           const disp = document.getElementById("profilePicPreview");
-          disp.src = `${apiBase}/${user.profilePic}`;
+          disp.src = `${user.profilePic}`;
         });
 
       profileForm.addEventListener("submit", async (e) => {
