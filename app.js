@@ -278,9 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
         profileForm.vrchatId.value = user.vrchatId || "";
 
         if (user.profilePic) {
-          disp.src = `${apiBase}/user/profile-pic/${encodeURIComponent(
-            user.profilePic
-          )}?t=${Date.now()}`;
+          disp.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(user.profilePic)}&t=${Date.now()}`;
         }
       };
 
@@ -303,9 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Update preview immediately, cache-busting
           if (result.profilePic) {
-            disp.src = `${apiBase}/user/profile-pic/${encodeURIComponent(
-              result.profilePic
-            )}?t=${Date.now()}`;
+            disp.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(result.profilePic)}&t=${Date.now()}`;
           }
         }
       });
