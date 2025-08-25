@@ -80,6 +80,7 @@ async function loadPartys() {
       if (me.profilePic) {
         const img = new Image();
         img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(me.profilePic)}`;
+        img.id = "profilePicPreview";
         profilePicCache[me._id] = img;
       }
     }
