@@ -142,7 +142,6 @@ async function joinParty(id) {
       headers: { Authorization: "Bearer " + localStorage.getItem("token") },
     });
     const result = await res.json();
-    console.log(result.owner);
     showNotification(
       `Successfully Joined ${result.party.owner.displayName}'s Party!`,
       "info",
@@ -179,7 +178,6 @@ async function inviteOne(memberId, partyId) {
     });
 
     const result = await res.json();
-    console.log("Invite result:", result);
     return result;
   } catch (err) {
     console.error(err);
@@ -297,7 +295,6 @@ document.addEventListener("DOMContentLoaded", () => {
           });
           const result = await res.json();
           alert("Profile updated!");
-          console.log(result);
 
           // Update preview immediately, cache-busting
           if (result.profilePic) {
