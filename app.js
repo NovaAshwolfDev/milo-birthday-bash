@@ -200,64 +200,6 @@ async function inviteAll(partyId) {
   }
 }
 
-async function loadUserProfile() {
-  const res = await fetch(`${apiBase}/user/me`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  const user = await res.json();
-  userCache[user._id] = user;
-
-  if (user.profilePic) {
-    if (!profilePicCache[user._id]) {
-      const img = new Image();
-      img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(user.profilePic)}`;
-      profilePicCache[user._id] = img;
-    }
-    document.getElementById("profilePicPreview").src = profilePicCache[user._id].src;
-  }
-
-  // Fill form
-  const profileForm = document.getElementById("profileForm");
-  profileForm.displayName.value = user.displayName || "";
-  profileForm.username.value = user.username || "";
-  profileForm.email.value = user.email || "";
-  profileForm.status.value = user.status || "";
-  profileForm.themeColor.value = user.themeColor || "";
-  profileForm.bio.value = user.bio || "";
-  profileForm.vrchatId.value = user.vrchatId || "";
-}
-
-// Update form submit
-if (profileForm) {
-  profileForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const clickedButton = e.submitter?.name;
-    if (clickedButton === "updateBtn") {
-      const formData = new FormData(profileForm);
-      const res = await fetch(`${apiBase}/user/me`, {
-        method: "PUT",
-        headers: { Authorization: "Bearer " + token },
-        body: formData,
-      });
-      const result = await res.json();
-
-      alert("Profile updated!");
-
-      // Update cache & preview
-      userCache[result._id] = result;
-      if (result.profilePic) {
-        if (!profilePicCache[result._id]) {
-          const img = new Image();
-          img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(result.profilePic)}`;
-          profilePicCache[result._id] = img;
-        }
-        document.getElementById("profilePicPreview").src = profilePicCache[result._id].src;
-      }
-    }
-  });
-}
-
-
 document.addEventListener("DOMContentLoaded", () => {
   const path = window.location.pathname;
 
@@ -308,7 +250,67 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   // Profile page
-  loadUserProfile();
+  if (path.endsWith("profile.html")) {
+    const profileForm = document.getElementById("profileForm");
+    const disp = document.getElementById("profilePicPreview");
+
+    if (profileForm) {
+      // Load user info
+      const loadUser = async () => {
+        const res = await fetch(apiBase + "/user/me", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const user = await res.json();
+
+        profileForm.displayName.value = user.displayName || "";
+        profileForm.username.value = user.username || "";
+        profileForm.email.value = user.email || "";
+        profileForm.status.value = user.status || "";
+        profileForm.themeColor.value = user.themeColor || "";
+        profileForm.bio.value = user.bio || "";
+        profileForm.vrchatId.value = user.vrchatId || "";
+        userCache[user._id] = user;
+
+        if (user.profilePic) {
+          if (!profilePicCache[user._id]) {
+            const img = new Image();
+            img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(user.profilePic)}`;
+            profilePicCache[user._id] = img;
+          }
+          document.getElementById("profilePicPreview").src = profilePicCache[user._id].src;
+        }
+      };
+
+      loadUser();
+
+      profileForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const clickedButton = e.submitter?.name;
+        if (clickedButton === "updateBtn") {
+          const formData = new FormData(profileForm);
+          const res = await fetch(apiBase + "/user/me", {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + token },
+            body: formData,
+          });
+          const result = await res.json();
+          alert("Profile updated!");
+
+          // Update preview immediately, cache-busting
+        userCache[result._id] = result;
+        if (result.profilePic) {
+          if (!profilePicCache[result._id]) {
+            const img = new Image();
+            img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(result.profilePic)}`;
+            profilePicCache[result._id] = img;
+          }
+          document.getElementById("profilePicPreview").src = profilePicCache[result._id].src;
+        }
+      }
+    });
+    }
+  }
 
   // Rooms page
   if (path.endsWith("rooms.html")) {
