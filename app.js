@@ -85,11 +85,7 @@ async function loadPartys() {
             const user = userCache[m._id];
             return `
           <div class="member">
-            <img src="${
-              user.profilePic
-                ? apiBase + "/" + user.profilePic.replace(/\\/g, "/")
-                : "default.png"
-            }" width="30" height="30" />
+            <img src="${apiBase}/user/profile-pic?file=${encodeURIComponent(user.profilePic)}&t=${Date.now()}" width="30" height="30" />
             <span>${user.displayName || user.username}</span>
             <small>(${user.status})</small>
           </div>
