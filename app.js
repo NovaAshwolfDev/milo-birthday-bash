@@ -1,6 +1,7 @@
 const apiBase = "https://milo-api.onrender.com/api";
 const token = localStorage.getItem("token");
 const userCache = {};
+const profilePicCache = {}; // NEW: cache Image objects
 const socket = io("https://milo-api.onrender.com/", { auth: { token } });
 
 async function loadRooms() {
@@ -19,6 +20,23 @@ async function loadRooms() {
     `
     )
     .join("");
+}
+
+async function getUser(id) {
+  if (!userCache[id]) {
+    const res = await fetch(`${apiBase}/user/${id}`, {
+      headers: { Authorization: "Bearer " + token },
+    });
+    userCache[id] = await res.json();
+
+    // Preload profile pic
+    if (userCache[id].profilePic) {
+      const img = new Image();
+      img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(userCache[id].profilePic)}`;
+      profilePicCache[id] = img;
+    }
+  }
+  return userCache[id];
 }
 
 function logout() {
@@ -49,76 +67,57 @@ function parseUsers(userData) {
 async function loadPartys() {
   try {
     const [partyRes, meRes] = await Promise.all([
-      fetch(apiBase + "/party", {
-        headers: { Authorization: "Bearer " + token },
-      }),
-      fetch(apiBase + "/user/me", {
-        headers: { Authorization: "Bearer " + token },
-      }),
+      fetch(`${apiBase}/party`, { headers: { Authorization: "Bearer " + token } }),
+      fetch(`${apiBase}/user/me`, { headers: { Authorization: "Bearer " + token } }),
     ]);
 
     const partys = await partyRes.json();
     const me = await meRes.json();
 
-    // Cache users
-    const allMemberIds = [
-      ...new Set(partys.flatMap((p) => p.members.map((m) => m._id))),
-    ];
-    const usersToFetch = allMemberIds.filter((id) => !userCache[id]);
+    // Cache me
+    if (!userCache[me._id]) {
+      userCache[me._id] = me;
+      if (me.profilePic) {
+        const img = new Image();
+        img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(me.profilePic)}`;
+        profilePicCache[me._id] = img;
+      }
+    }
 
-    await Promise.all(
-      usersToFetch.map(async (id) => {
-        const res = await fetch(apiBase + "/user/" + id, {
-          headers: { Authorization: "Bearer " + token },
-        });
-        const user = await res.json();
-        userCache[id] = user;
-      })
-    );
+    const allMemberIds = [...new Set(partys.flatMap(p => p.members.map(m => m._id)))];
+    await Promise.all(allMemberIds.map(id => getUser(id)));
 
-    // Render parties
     const list = document.getElementById("partyList");
     list.innerHTML = partys
-      .map((p) => {
-        const membersHTML = p.members
-          .map((m) => {
-            const user = userCache[m._id];
-            return `
-          <div class="member">
-            <img src="${apiBase}/user/profile-pic?file=${encodeURIComponent(user.profilePic)}&t=${Date.now()}" width="30" height="30" />
-            <span>${user.displayName || user.username}</span>
-            <small>(${user.status})</small>
-          </div>
-        `;
-          })
-          .join("");
+      .map(p => {
+        const membersHTML = p.members.map(m => {
+          const user = userCache[m._id];
+          const img = profilePicCache[m._id] ? profilePicCache[m._id].src : '';
+          return `
+            <div class="member">
+              <img src="${img}" width="30" height="30" />
+              <span>${user.displayName || user.username}</span>
+              <small>(${user.status})</small>
+            </div>
+          `;
+        }).join("");
 
         const isOwner = me._id === p.owner._id;
         const hasInstance = p.instanceId && p.instanceId !== "";
 
         return `
-        <div class="room">
-          <strong>${p.name}</strong> (${p.members.length}/${
-          p.maxMembers || "∞"
-        })
-          <div class="members">${membersHTML}</div>
-          <div class="partyButtonsContainer">
-            <button class="partyButtons" onclick="joinParty('${
-              p._id
-            }')">Join</button>
-            <button class="partyButtons" onclick="leaveParty('${
-              p._id
-            }')">Leave</button>
-            ${
-              isOwner && hasInstance
-                ? `<button class="partyButtons" onclick="inviteAll('${p._id}')">Invite All To You</button>`
-                : ""
-            }
-          </div>
-        </div><br>
-      `;
-      })
-      .join("");
+          <div class="room">
+            <strong>${p.name}</strong> (${p.members.length}/${p.maxMembers || "∞"})
+            <div class="members">${membersHTML}</div>
+            <div class="partyButtonsContainer">
+              <button class="partyButtons" onclick="joinParty('${p._id}')">Join</button>
+              <button class="partyButtons" onclick="leaveParty('${p._id}')">Leave</button>
+              ${isOwner && hasInstance ? `<button class="partyButtons" onclick="inviteAll('${p._id}')">Invite All To You</button>` : ""}
+            </div>
+          </div><br>
+        `;
+      }).join("");
+
   } catch (err) {
     showNotification(`Failed to load parties: ${err}`, "error", 5000);
   }
@@ -201,6 +200,64 @@ async function inviteAll(partyId) {
   }
 }
 
+async function loadUserProfile() {
+  const res = await fetch(`${apiBase}/user/me`, {
+    headers: { Authorization: "Bearer " + token },
+  });
+  const user = await res.json();
+  userCache[user._id] = user;
+
+  if (user.profilePic) {
+    if (!profilePicCache[user._id]) {
+      const img = new Image();
+      img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(user.profilePic)}`;
+      profilePicCache[user._id] = img;
+    }
+    document.getElementById("profilePicPreview").src = profilePicCache[user._id].src;
+  }
+
+  // Fill form
+  const profileForm = document.getElementById("profileForm");
+  profileForm.displayName.value = user.displayName || "";
+  profileForm.username.value = user.username || "";
+  profileForm.email.value = user.email || "";
+  profileForm.status.value = user.status || "";
+  profileForm.themeColor.value = user.themeColor || "";
+  profileForm.bio.value = user.bio || "";
+  profileForm.vrchatId.value = user.vrchatId || "";
+}
+
+// Update form submit
+if (profileForm) {
+  profileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const clickedButton = e.submitter?.name;
+    if (clickedButton === "updateBtn") {
+      const formData = new FormData(profileForm);
+      const res = await fetch(`${apiBase}/user/me`, {
+        method: "PUT",
+        headers: { Authorization: "Bearer " + token },
+        body: formData,
+      });
+      const result = await res.json();
+
+      alert("Profile updated!");
+
+      // Update cache & preview
+      userCache[result._id] = result;
+      if (result.profilePic) {
+        if (!profilePicCache[result._id]) {
+          const img = new Image();
+          img.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(result.profilePic)}`;
+          profilePicCache[result._id] = img;
+        }
+        document.getElementById("profilePicPreview").src = profilePicCache[result._id].src;
+      }
+    }
+  });
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const path = window.location.pathname;
 
@@ -251,55 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   // Profile page
-  if (path.endsWith("profile.html")) {
-    const profileForm = document.getElementById("profileForm");
-    const disp = document.getElementById("profilePicPreview");
-
-    if (profileForm) {
-      // Load user info
-      const loadUser = async () => {
-        const res = await fetch(apiBase + "/user/me", {
-          headers: { Authorization: "Bearer " + token },
-        });
-        const user = await res.json();
-
-        profileForm.displayName.value = user.displayName || "";
-        profileForm.username.value = user.username || "";
-        profileForm.email.value = user.email || "";
-        profileForm.status.value = user.status || "";
-        profileForm.themeColor.value = user.themeColor || "";
-        profileForm.bio.value = user.bio || "";
-        profileForm.vrchatId.value = user.vrchatId || "";
-
-        if (user.profilePic) {
-          disp.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(user.profilePic)}&t=${Date.now()}`;
-        }
-      };
-
-      loadUser();
-
-      profileForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const clickedButton = e.submitter?.name;
-        if (clickedButton === "updateBtn") {
-          const formData = new FormData(profileForm);
-          const res = await fetch(apiBase + "/user/me", {
-            method: "PUT",
-            headers: { Authorization: "Bearer " + token },
-            body: formData,
-          });
-          const result = await res.json();
-          alert("Profile updated!");
-
-          // Update preview immediately, cache-busting
-          if (result.profilePic) {
-            disp.src = `${apiBase}/user/profile-pic?file=${encodeURIComponent(result.profilePic)}&t=${Date.now()}`;
-          }
-        }
-      });
-    }
-  }
+  loadUserProfile();
 
   // Rooms page
   if (path.endsWith("rooms.html")) {
